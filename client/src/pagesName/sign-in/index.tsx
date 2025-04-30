@@ -2,7 +2,7 @@
 // import { useRouter } from "next/navigation";
 import { useForm } from 'react-hook-form';
 
-import React from "react";
+import React, { FC } from "react";
 import styles from "./styles.module.css";
 
 type TForm = {
@@ -10,7 +10,7 @@ type TForm = {
   password: string;
 }
 
-const SignIn = () => {
+const SignIn: FC = () => {
   // const router = useRouter()
 
   const {
