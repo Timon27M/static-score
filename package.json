@@ -1,0 +1,46 @@
+{
+  "name": "social-api",
+  "version": "1.0.0",
+  "description": "Backend API для социальной сети",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "lint": "npx eslint .",
+    "client": "cd client && npm start",
+    "client:install": "cd client && npm install", 
+    "client:build": "cd client && npm run build",
+    "client:dev": "cd client && npm run dev",
+    "docker:server": "cd server && docker-compose up --build",
+    "docker:server:dev": "cd server && docker-compose up --build -d",
+    "docker:client": "cd client && docker-compose up --build",
+    "docker:client:dev": "cd client && docker-compose up --build -d",
+    "docker:down": "docker-compose down",
+    "docker:client:down": "cd client && docker-compose down",
+    "docker:dev": "concurrently \"npm run docker:server:dev\" \"npm run docker:client:dev\"",
+    "docker": "concurrently \"npm run docker:server\" \"npm run docker:client\"",
+    "docker:stop": "concurrently \"npm run docker:down\" \"npm run docker:client:down\""
+  },
+  "keywords": [],
+  "author": "Ваше имя",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "celebrate": "^15.0.1", 
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.7.0",
+    "express-winston": "^4.2.0",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.2.2",
+    "validator": "^13.9.0",
+    "winston": "^3.9.0",
+    "concurrently": "^8.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.42.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "nodemon": "^2.0.22"
+  }
+}
