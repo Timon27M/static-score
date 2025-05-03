@@ -28,4 +28,4 @@ export default function Form({ handleSubmit, title, children }: Props) {
             <Button size="large" type="submit" variant={"contained"}>Войти</Button>
         </StyledForm>
     )
-}
+};
