@@ -2,8 +2,8 @@
 import {FormProvider, useForm} from 'react-hook-form';
 
 import React, { FC } from "react";
-import {TRegisterForm} from "@/features/auth/model/types";
-import RegisterForm from '@/features/auth/ui/RegisterForm';
+import {TRegisterForm} from "@/features/registrations/model/types";
+import RegisterForm from '@/features/registrations/ui/RegisterForm';
 import styled from "@emotion/styled";
 
 const RegisterPage = styled.section`

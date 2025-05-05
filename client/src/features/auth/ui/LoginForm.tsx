@@ -3,12 +3,14 @@ import { TLoginForm } from "@/features/auth/model/types";
 import PasswordTextField from "@/shared/ui/TextField/PasswordTextField";
 import Form from "@/shared/ui/Form/Form";
 import TextField from "@/shared/ui/TextField/TextField";
+import { authApi } from "../api/api";
 
 export default function LoginForm() {
   const { handleSubmit, formState: {errors} } = useFormContext<TLoginForm>();
-
   function onSubmit(data: TLoginForm) {
-    console.log(data);
+    authApi(data)
+      .then((res) => {(console.log(res))})
+      .catch((err) => {(console.log(err))})
   }
 
   return (
