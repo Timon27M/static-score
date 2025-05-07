@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   experimental: {
 //     appDir: true,
   },
+  env: {
+    NEXT_PUBLIC_AUTHAPI_URL: 'http://localhost:4000/',  
+  }
 };
 
 export default nextConfig;
