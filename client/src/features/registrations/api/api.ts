@@ -12,6 +12,7 @@ export function registerApi(data: TRegisterForm) {
             if (ex.response?.status == 400) {
                 const error = ex.response.data as ErrorData;
                 console.log(error);
+                
                 if (error.reason == 'User already in system') {
                     throw new Error('Пользователь уже в системе');
                 }
