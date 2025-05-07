@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const { jwtVerify } = require("jose");
+const { SignToken } = require("../middlewares/auth");
 
 const BadRequestError = require("../errors/BadRequestError");
 const NotFoundError = require("../errors/NotFoundError");
@@ -8,38 +9,44 @@ const UnauthorizatedError = require("../errors/UnauthorizatedError");
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
+const key = new TextEncoder().encode(
+  NODE_ENV === "production" ? JWT_SECRET : "super-strong-secret",
+);
+
 const User = require("../models/user");
 
-const getUser = (req, res, next) => {
+const getUser = async (req, res, next) => {
   const { authorization } = req.headers;
-  const token = authorization.replace('Bearer ', '');
-  const id = jwt.verify(token, `${NODE_ENV === 'production' ? JWT_SECRET : 'super-strong-secret'}`);
-  User.findById(id)
-    .orFail(() => {
+  if (!authorization || !authorization.startsWith("Bearer ")) {
+    return next(new UnauthorizatedError("Необходима авторизация"));
+  }
+
+  const token = authorization.replace("Bearer ", "");
+
+  try {
+    const { payload } = await jwtVerify(token, key);
+    const user = await User.findById(payload._id).orFail(() => {
       throw new NotFoundError("Пользователь не найден");
-    })
-    .then((user) => {
-      res.send({
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        avatar: user.avatar,
-      });
-    })
-    .catch((err) => {
-      if (err.name === "DocumentNotFoundError") {
-        return next(new NotFoundError("Пользователь не найден"));
-      }
-      return next(err);
     });
+
+    return res.send({
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      avatar: user.avatar,
+    });
+  } catch (err) {
+    if (err.name === "DocumentNotFoundError") {
+      return next(new NotFoundError("Пользователь не найден"));
+    }
+    return next(err);
+  }
 };
 
 const getSearchUser = (req, res, next) => {
   const { name } = req.body;
   User.findOne({ name })
-    .orFail(() => {
-      throw new NotFoundError("Пользователь не найден");
-    })
+    .orFail(() => new NotFoundError("Пользователь не найден"))
     .then((user) => {
       res.send({
         name: user.name,
@@ -72,65 +79,55 @@ const updateUser = (req, res, next) => {
       phone,
       avatar,
     },
-    {
-      new: true,
-      runValidators: true,
-    },
+    { new: true, runValidators: true },
   )
-    .orFail(() => {
-      throw new NotFoundError('Пользователь не найден');
-    })
+    .orFail(() => new NotFoundError("Пользователь не найден"))
     .then((user) => {
       res.send({
         name: user.name,
-        phone: user.phone,
         email: user.email,
+        phone: user.phone,
         avatar: user.avatar,
       });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+      if (err.name === "ValidationError") {
+        return next(new BadRequestError("Переданы некорректные данные"));
       }
       if (err.code === 11000) {
-        return next(new IncorrectEmailError('Пользователь с таким email уже существует'));
+        return next(
+          new IncorrectEmailError("Пользователь с таким email уже существует"),
+        );
       }
       return next(err);
     });
 };
 
 const updateAvatarUser = (req, res, next) => {
-  const {
-    avatar,
-  } = req.body;
+  const { avatar } = req.body;
 
   User.findByIdAndUpdate(
     req.user._id,
-    {
-      avatar,
-    },
-    {
-      new: true,
-      runValidators: true,
-    },
+    { avatar },
+    { new: true, runValidators: true },
   )
-    .orFail(() => {
-      throw new NotFoundError('Пользователь не найден');
-    })
+    .orFail(() => new NotFoundError("Пользователь не найден"))
     .then((user) => {
       res.send({
         name: user.name,
-        phone: user.phone,
         email: user.email,
+        phone: user.phone,
         avatar: user.avatar,
       });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+      if (err.name === "ValidationError") {
+        return next(new BadRequestError("Переданы некорректные данные"));
       }
       if (err.code === 11000) {
-        return next(new IncorrectEmailError('Пользователь с таким email уже существует'));
+        return next(
+          new IncorrectEmailError("Пользователь с таким email уже существует"),
+        );
       }
       return next(err);
     });
@@ -144,7 +141,8 @@ const createUser = (req, res, next) => {
     password,
   } = req.body;
 
-  bcrypt.hash(password, 10)
+  bcrypt
+    .hash(password, 10)
     .then((hash) => User.create({
       name,
       phone,
@@ -152,17 +150,22 @@ const createUser = (req, res, next) => {
       password: hash,
     }))
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'super-strong-secret');
-      res.status(200).send({
-        token,
-      });
+      SignToken({ _id: user._id })
+        .then((token) => {
+          res.status(201).send({ token });
+        })
+        .catch((err) => {
+          throw new Error(err);
+        });
     })
     .catch((err) => {
       if (err.code === 11000) {
-        return next(new IncorrectEmailError('Пользователь с таким email уже существует'));
+        return next(
+          new IncorrectEmailError("Пользователь с таким email уже существует"),
+        );
       }
-      if (err.name === 'ValidationError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+      if (err.name === "ValidationError") {
+        return next(new BadRequestError("Переданы некорректные данные"));
       }
       return next(err);
     });
@@ -173,17 +176,21 @@ const loginUser = (req, res, next) => {
 
   User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'super-strong-secret');
-      res.send({
-        email: user.email,
-        name: user.name,
-        phone: user.phone,
-        avatar: user.avater,
-        token,
-      });
+      SignToken({ _id: user._id }).then((token) => {
+        res.send({
+          email: user.email,
+          name: user.name,
+          phone: user.phone,
+          avatar: user.avatar,
+          token,
+        });
+      })
+        .catch((err) => {
+          throw new Error(err);
+        });
     })
     .catch(() => {
-      next(new UnauthorizatedError('Неправильный логин или пароль'));
+      next(new UnauthorizatedError("Неправильный логин или пароль"));
     });
 };
 
