@@ -9,9 +9,7 @@ const rateLimiter = require("./middlewares/rateLimiter");
 const routes = require("./routes/index");
 
 const { requestLogger, errorLogger } = require("./middlewares/logger");
-// console.log('process.env.MONGO_URI:', process.env.MONGO_URI);
-// console.log('process.env.MONGO_ROOT_USERNAME:', process.env.MONGO_ROOT_USERNAME);
-// console.log('process.env.MONGO_ROOT_PASSWORD:', process.env.MONGO_ROOT_PASSWORD);
+
 const { MONGO_URI } = process.env;
 const { PORT = 4000, DBlink = MONGO_URI } = process.env;
 

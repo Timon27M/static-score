@@ -24,7 +24,7 @@ const getUser = async (req, res, next) => {
   const token = authorization.replace("Bearer ", "");
 
   try {
-    const { payload } = await jwtVerify(token, key);
+    const { payload } = await jwtVerify(token, key, { algorithms: ["HS256"] });
     const user = await User.findById(payload._id).orFail(() => {
       throw new NotFoundError("Пользователь не найден");
     });

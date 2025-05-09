@@ -2,6 +2,7 @@ export type TResLoginForm = {
     email: string;
     name: string;
     phone: string;
+    avatar: string;
     token: string;
 }
 

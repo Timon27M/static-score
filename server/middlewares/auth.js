@@ -26,7 +26,11 @@ const auth = async (req, res, next) => {
 };
 
 async function SignToken(payload) {
-  const token = await new SignJWT(payload)
+  const validPayload = {
+    _id: payload._id.toString(),
+  };
+
+  const token = await new SignJWT(validPayload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("1h")
