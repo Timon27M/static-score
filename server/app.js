@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require("express");
+const cookieParser = require('cookie-parser');
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const { errors } = require("celebrate");
@@ -16,6 +17,7 @@ const { PORT = 4000, DBlink = MONGO_URI } = process.env;
 const app = express();
 
 app.use(bodyParser.json());
+app.use(cookieParser());
 app.use(cors);
 
 app.use(requestLogger);

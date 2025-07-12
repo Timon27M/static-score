@@ -11,18 +11,18 @@ function LoginForm() {
   const { handleSubmit, formState: {errors} } = useFormContext<TLoginForm>();
   
   const store = useStore();
-
   function onSubmit(data: TLoginForm) {
     authApi(data)
       .then((res) => {
         console.log(res)
-        
+
         store.user.setUser({
           name: res.name,
           email: res.email,
           phone: res.phone,
           avatar: res.avatar,
         })
+        localStorage.setItem('token', res.token)
         console.log(store)
       })
       .catch((err) => {(console.log(err))})

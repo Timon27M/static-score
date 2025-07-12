@@ -1,7 +1,5 @@
 const allowedCors = [
   'http://localhost:3000',
-  'http://tim2772.nomoredomains.work',
-  'https://tim2772.nomoredomains.work',
 ];
 
 const cors = (req, res, next) => {
@@ -12,6 +10,7 @@ const cors = (req, res, next) => {
 
   if (allowedCors.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
   }
 
   if (method === 'OPTIONS') {
