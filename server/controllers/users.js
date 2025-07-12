@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const { jwtVerify } = require("jose");
-const { SignToken } = require("../middlewares/auth");
+const { SignToken } = require("../middlewares/auth.js");
 
 const BadRequestError = require("../errors/BadRequestError");
 const NotFoundError = require("../errors/NotFoundError");
@@ -16,15 +16,21 @@ const key = new TextEncoder().encode(
 const User = require("../models/user");
 
 const getUser = async (req, res, next) => {
-  const { authorization } = req.headers;
-  if (!authorization || !authorization.startsWith("Bearer ")) {
+  // const { authorization } = req.headers;
+  // if (!authorization || !authorization.startsWith("Bearer ")) {
+  //   return next(new UnauthorizatedError("Необходима авторизация"));
+  // }
+
+  // const token = authorization.replace("Bearer ", "");
+
+  const { token } = req.cookies;
+
+  if (!token) {
     return next(new UnauthorizatedError("Необходима авторизация"));
   }
 
-  const token = authorization.replace("Bearer ", "");
-
   try {
-    const { payload } = await jwtVerify(token, key);
+    const { payload } = await jwtVerify(token, key, { algorithms: ["HS256"] });
     const user = await User.findById(payload._id).orFail(() => {
       throw new NotFoundError("Пользователь не найден");
     });
@@ -64,12 +70,7 @@ const getSearchUser = (req, res, next) => {
 };
 
 const updateUser = (req, res, next) => {
-  const {
-    name,
-    email,
-    phone,
-    avatar,
-  } = req.body;
+  const { name, email, phone, avatar } = req.body;
 
   User.findByIdAndUpdate(
     req.user._id,
@@ -79,7 +80,7 @@ const updateUser = (req, res, next) => {
       phone,
       avatar,
     },
-    { new: true, runValidators: true },
+    { new: true, runValidators: true }
   )
     .orFail(() => new NotFoundError("Пользователь не найден"))
     .then((user) => {
@@ -96,7 +97,7 @@ const updateUser = (req, res, next) => {
       }
       if (err.code === 11000) {
         return next(
-          new IncorrectEmailError("Пользователь с таким email уже существует"),
+          new IncorrectEmailError("Пользователь с таким email уже существует")
         );
       }
       return next(err);
@@ -109,7 +110,7 @@ const updateAvatarUser = (req, res, next) => {
   User.findByIdAndUpdate(
     req.user._id,
     { avatar },
-    { new: true, runValidators: true },
+    { new: true, runValidators: true }
   )
     .orFail(() => new NotFoundError("Пользователь не найден"))
     .then((user) => {
@@ -126,7 +127,7 @@ const updateAvatarUser = (req, res, next) => {
       }
       if (err.code === 11000) {
         return next(
-          new IncorrectEmailError("Пользователь с таким email уже существует"),
+          new IncorrectEmailError("Пользователь с таким email уже существует")
         );
       }
       return next(err);
@@ -134,24 +135,27 @@ const updateAvatarUser = (req, res, next) => {
 };
 
 const createUser = (req, res, next) => {
-  const {
-    name,
-    phone,
-    email,
-    password,
-  } = req.body;
+  const { name, phone, email, password } = req.body;
 
   bcrypt
     .hash(password, 10)
-    .then((hash) => User.create({
-      name,
-      phone,
-      email,
-      password: hash,
-    }))
+    .then((hash) =>
+      User.create({
+        name,
+        phone,
+        email,
+        password: hash,
+      })
+    )
     .then((user) => {
       SignToken({ _id: user._id })
         .then((token) => {
+          res.cookie("token", token, {
+            httpOnly: true, // Недоступна через JavaScript
+            secure: true, // Только HTTPS (если не в dev-режиме)
+            sameSite: "strict", // Защита от CSRF
+            maxAge: 24 * 60 * 60 * 1000, // Срок жизни (1 день)
+          });
           res.status(201).send({ token });
         })
         .catch((err) => {
@@ -161,7 +165,7 @@ const createUser = (req, res, next) => {
     .catch((err) => {
       if (err.code === 11000) {
         return next(
-          new IncorrectEmailError("Пользователь с таким email уже существует"),
+          new IncorrectEmailError("Пользователь с таким email уже существует")
         );
       }
       if (err.name === "ValidationError") {
@@ -176,15 +180,22 @@ const loginUser = (req, res, next) => {
 
   User.findUserByCredentials(email, password)
     .then((user) => {
-      SignToken({ _id: user._id }).then((token) => {
-        res.send({
-          email: user.email,
-          name: user.name,
-          phone: user.phone,
-          avatar: user.avatar,
-          token,
-        });
-      })
+      SignToken({ _id: user._id })
+        .then((token) => {
+          res.cookie("token", token, {
+            httpOnly: true, // Недоступна через JavaScript
+            secure: true, // Только HTTPS (если не в dev-режиме)
+            sameSite: "strict", // Защита от CSRF
+            maxAge: 24 * 60 * 60 * 1000, // Срок жизни (1 день)
+          });
+          res.send({
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+            avatar: user.avatar,
+            token,
+          });
+        })
         .catch((err) => {
           throw new Error(err);
         });

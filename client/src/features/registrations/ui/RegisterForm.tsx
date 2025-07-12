@@ -12,6 +12,7 @@ export default function RegisterForm() {
     console.log(data);
     registerApi(data)
       .then((res: TResRegisterForm) => console.log(res))
+
   }
 
   return (

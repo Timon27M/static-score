@@ -16,6 +16,8 @@ router.post("/signup", validationCreateUser, createUser);
 router.use(auth);
 router.use("/", routesUser);
 
-router.use('/', (req, res, next) => next(new NotFoundError('Произошла ошибка: Неправильный путь')));
+router.use("/", (req, res, next) =>
+  next(new NotFoundError("Произошла ошибка: Неправильный путь"))
+);
 
 module.exports = router;

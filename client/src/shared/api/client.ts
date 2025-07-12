@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+axios.defaults.withCredentials = true;
+
 const NEXT_PUBLIC_AUTHAPI_URL = process.env.NEXT_PUBLIC_AUTHAPI_URL
 
 export const apiClient = axios.create({
