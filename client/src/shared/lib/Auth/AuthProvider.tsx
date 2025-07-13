@@ -16,22 +16,6 @@ function AuthProvider({ children }: TProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useLayoutEffect(() => {
-    // const token = localStorage.getItem('token');
-    // console.log('token', token);
-    // if (token) {
-    //     getUser().then((res) => {
-    //        store.user.setUser({...res, isLoggedIn: true})
-
-    //     }).catch((err) => {
-    //         console.log(err)
-    //         router.push('/')
-    //     })
-    // }
-
-    // if (!token) {
-    //     router.push('/')
-    // }
-
     getUser()
       .then((res) => {
         console.log(res.data);
@@ -42,7 +26,7 @@ function AuthProvider({ children }: TProps) {
         setIsLoading(false);
       })
       .catch(() => {
-        router.push("/");
+        router.push("/sign-in");
       })
   }, []);
 

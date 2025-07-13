@@ -10,19 +10,12 @@ const UnauthorizatedError = require("../errors/UnauthorizatedError");
 const { NODE_ENV, JWT_SECRET } = process.env;
 
 const key = new TextEncoder().encode(
-  NODE_ENV === "production" ? JWT_SECRET : "super-strong-secret",
+  NODE_ENV === "production" ? JWT_SECRET : "super-strong-secret"
 );
 
 const User = require("../models/user");
 
 const getUser = async (req, res, next) => {
-  // const { authorization } = req.headers;
-  // if (!authorization || !authorization.startsWith("Bearer ")) {
-  //   return next(new UnauthorizatedError("Необходима авторизация"));
-  // }
-
-  // const token = authorization.replace("Bearer ", "");
-
   const { token } = req.cookies;
 
   if (!token) {
@@ -205,6 +198,20 @@ const loginUser = (req, res, next) => {
     });
 };
 
+const logoutUser = (req, res) => {
+  res
+    .clearCookie("token", {
+      httpOnly: true,
+      secure: true, // Для HTTPS
+      sameSite: "strict", // Защита от CSRF
+    })
+    .status(200)
+    .send({ message: "Вы успешно вышли из аккаунта" })
+    .catch((err) => {
+      throw new Error(err);
+    });
+};
+
 module.exports = {
   getUser,
   updateUser,
@@ -212,4 +219,5 @@ module.exports = {
   loginUser,
   getSearchUser,
   updateAvatarUser,
+  logoutUser,
 };

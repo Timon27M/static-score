@@ -6,10 +6,12 @@ import TextField from "@/shared/ui/TextField/TextField";
 import { authApi } from "../api/api";
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/shared/lib/store/hooks/useStore";
+import { useRouter  } from "next/navigation";
 
 function LoginForm() {
   const { handleSubmit, formState: {errors} } = useFormContext<TLoginForm>();
-  
+  const router = useRouter();
+
   const store = useStore();
   function onSubmit(data: TLoginForm) {
     authApi(data)
@@ -22,7 +24,7 @@ function LoginForm() {
           phone: res.phone,
           avatar: res.avatar,
         })
-        localStorage.setItem('token', res.token)
+        router.push('/')
         console.log(store)
       })
       .catch((err) => {(console.log(err))})
